@@ -1,0 +1,14 @@
+model_name: mobilenet_v3_small
+num_classes: 5
+freeze_backbone: true
+batch_size: 32
+epochs: 10
+lr: 0.001
+num_workers: 2
+seed: 42
+data_dir: data
+curated_csv: data/curated_subset.csv
+output_dir: outputs/mobilenet_v3_small
+mlflow_experiment_name: docscan-cv
+run_name: mobilenet_v3_small
+mlflow_tracking_uri: sqlite:///mlruns.db
