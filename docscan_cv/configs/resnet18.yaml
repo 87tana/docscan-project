@@ -8,7 +8,7 @@ num_workers: 2
 seed: 42
 data_dir: data
 curated_csv: data/curated_subset.csv
-output_dir: outputs/resnet18
+output_dir: /content/drive/MyDrive/Docscan_project/outputs/resnet18
 mlflow_experiment_name: docscan-cv
 run_name: resnet18
-mlflow_tracking_uri: sqlite:///mlruns.db
+mlflow_tracking_uri: sqlite:////content/drive/MyDrive/Docscan_project/mlruns.db

@@ -8,7 +8,7 @@ num_workers: 2
 seed: 42
 data_dir: data
 curated_csv: data/curated_subset.csv
-output_dir: outputs/mobilenet_v3_small
+output_dir: /content/drive/MyDrive/Docscan_project/outputs/mobilenet_v3_small
 mlflow_experiment_name: docscan-cv
 run_name: mobilenet_v3_small
-mlflow_tracking_uri: sqlite:///mlruns.db
+mlflow_tracking_uri: sqlite:////content/drive/MyDrive/Docscan_project/mlruns.db

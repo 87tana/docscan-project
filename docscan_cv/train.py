@@ -1,4 +1,3 @@
-
 import os
 import argparse
 import random
@@ -50,8 +49,8 @@ def main(config_path):
     optimizer = torch.optim.AdamW(trainable_params, lr=config["lr"])
 
     best_val_accuracy = 0.0
-    os.makedirs("outputs", exist_ok=True)
     checkpoint_path = f"{config['output_dir']}_best.pt"
+    os.makedirs(os.path.dirname(checkpoint_path), exist_ok=True)
 
     with mlflow_utils.start_run(config):
         mlflow_utils.log_params(config)
