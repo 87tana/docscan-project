@@ -2,7 +2,7 @@ torch
 torchvision
 transformers
 datasets
-mlflow
+mlflow==3.15.2
 pandas
 numpy
 pillow
