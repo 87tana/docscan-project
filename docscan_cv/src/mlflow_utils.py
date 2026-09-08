@@ -1,10 +1,19 @@
 import matplotlib.pyplot as plt
 import mlflow
+from mlflow.tracking import MlflowClient
 
 
 def start_run(config):
     mlflow.set_tracking_uri(config.get("mlflow_tracking_uri", "sqlite:///mlruns.db"))
-    mlflow.set_experiment(config["mlflow_experiment_name"])
+    experiment_name = config["mlflow_experiment_name"]
+    artifact_location = config.get("mlflow_artifact_location")
+
+    client = MlflowClient()
+    experiment = client.get_experiment_by_name(experiment_name)
+    if experiment is None:
+        client.create_experiment(experiment_name, artifact_location=artifact_location)
+
+    mlflow.set_experiment(experiment_name)
     return mlflow.start_run(run_name=config.get("run_name"))
 
 
