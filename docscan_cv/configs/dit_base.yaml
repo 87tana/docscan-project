@@ -9,7 +9,8 @@ seed: 42
 data_dir: data
 curated_csv: data/curated_subset.csv
 output_dir: /content/drive/MyDrive/Docscan_project/outputs/dit_base
-mlflow_experiment_name: docscan-cv
+mlflow_experiment_name: docscan-cv-v2
 run_name: dit_base
 mlflow_tracking_uri: sqlite:////content/drive/MyDrive/Docscan_project/mlruns.db
 hf_checkpoint: microsoft/dit-base-finetuned-rvlcdip
+mlflow_artifact_location: /content/drive/MyDrive/Docscan_project/mlartifacts
