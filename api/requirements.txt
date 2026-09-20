@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+mlflow
+torch
+transformers
+pillow
+torchvision
+boto3
+psycopg2-binary
+easyocr
+anthropic
+sentencepiece
+protobuf

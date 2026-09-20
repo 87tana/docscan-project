@@ -6,3 +6,15 @@ mlruns/
 checkpoints/
 .ipynb_checkpoints/
 .DS_Store
+
+# Model artifacts and local MLflow data (too large for Git, model lives in registry)
+mlflow_local/
+
+# Scratch test images (debug artifacts, not project files)
+test_*.png
+
+# Environment/secrets
+.env
+
+# Pytest cache
+.pytest_cache/
