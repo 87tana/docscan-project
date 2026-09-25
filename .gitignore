@@ -19,3 +19,4 @@ test_*.png
 # Pytest cache
 .pytest_cache/
 test_samples/
+actions-runner/

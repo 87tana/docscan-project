@@ -8,16 +8,11 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -28,11 +23,4 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           PROJECT_ROOT: ${{ github.workspace }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          RDS_HOST: ${{ secrets.RDS_HOST }}
-          RDS_PORT: ${{ secrets.RDS_PORT }}
-          RDS_USER: ${{ secrets.RDS_USER }}
-          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
-          RDS_DB_NAME: ${{ secrets.RDS_DB_NAME }}
         run: pytest tests/ -v
