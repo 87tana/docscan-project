@@ -27,6 +27,8 @@ from transformers import RobertaTokenizer, ViTImageProcessor, VisionEncoderDecod
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 from fastapi import Response
 
+from api.constants import CLASS_NAMES
+
 logger = logging.getLogger("docscan")
 logger.setLevel(logging.INFO)
 logger.handlers = []  # clear any existing handlers first, no matter how many
@@ -109,7 +111,7 @@ IMAGE_SIZE = 224
 MEAN = [0.5, 0.5, 0.5]
 STD = [0.5, 0.5, 0.5]
 
-CLASS_NAMES = ["form", "invoice", "handwritten", "questionnaire", "fallback"]
+#CLASS_NAMES = ["form", "invoice", "handwritten", "questionnaire", "fallback"]
 
 preprocess = transforms.Compose([
     transforms.Resize((IMAGE_SIZE, IMAGE_SIZE)),
