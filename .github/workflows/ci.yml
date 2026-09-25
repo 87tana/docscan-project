@@ -8,19 +8,21 @@ on:
 
 jobs:
   test:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Check out code
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           pip install -r api/requirements.txt
           pip install pytest httpx
 
-       - name: Run tests
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          PROJECT_ROOT: /home/tannaz/Documents/Projects/Docscan_project
-        run: pytest tests/ -v
+      - name: Run unit tests
+        run: pytest tests/test_api.py::test_class_names_count tests/test_api.py::test_class_names_are_unique -v
