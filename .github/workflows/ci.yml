@@ -19,8 +19,8 @@ jobs:
           pip install -r api/requirements.txt
           pip install pytest httpx
 
-      - name: Run tests
+       - name: Run tests
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          PROJECT_ROOT: ${{ github.workspace }}
+          PROJECT_ROOT: /home/tannaz/Documents/Projects/Docscan_project
         run: pytest tests/ -v
