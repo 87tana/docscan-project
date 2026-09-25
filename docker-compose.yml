@@ -43,6 +43,31 @@ services:
     networks:
       - docscan-net
 
+
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - docscan-net
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - docscan-net
+
 networks:
   docscan-net:
     driver: bridge
@@ -50,3 +75,5 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+  prometheus_data:
+  grafana_data:

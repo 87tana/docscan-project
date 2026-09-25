@@ -1,4 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
+import logging
 import mlflow
 import mlflow.pytorch
 from fastapi import FastAPI
@@ -20,21 +24,85 @@ import json
 
 from transformers import RobertaTokenizer, ViTImageProcessor, VisionEncoderDecoderModel
 
-# --- MLflow setup: point at the same local tracking db we've been using ---
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+from fastapi import Response
+
+logger = logging.getLogger("docscan")
+logger.setLevel(logging.INFO)
+logger.handlers = []  # clear any existing handlers first, no matter how many
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
+logger.addHandler(handler)
+logger.propagate = False
+
+# --- MLflow setup: use hosted registry (RDS+S3) if configured, else fall back to local ---
 PROJECT_ROOT = os.environ.get("PROJECT_ROOT", "/home/tannaz/Documents/Projects/Docscan_project")
-MLFLOW_LOCAL_DIR = os.path.join(PROJECT_ROOT, "mlflow_local")
-mlflow.set_tracking_uri(f"sqlite:///{os.path.join(MLFLOW_LOCAL_DIR, 'mlruns.db')}")
+
+RDS_HOST = os.environ.get("RDS_HOST")
+
+if RDS_HOST:
+    RDS_PORT = os.environ["RDS_PORT"]
+    RDS_USER = os.environ["RDS_USER"]
+    RDS_PASSWORD = os.environ["RDS_PASSWORD"]
+    RDS_DB_NAME = os.environ["RDS_DB_NAME"]
+    tracking_uri = f"postgresql://{RDS_USER}:{RDS_PASSWORD}@{RDS_HOST}:{RDS_PORT}/{RDS_DB_NAME}"
+    mlflow.set_tracking_uri(tracking_uri)
+else:
+    MLFLOW_LOCAL_DIR = os.path.join(PROJECT_ROOT, "mlflow_local")
+    mlflow.set_tracking_uri(f"sqlite:///{os.path.join(MLFLOW_LOCAL_DIR, 'mlruns.db')}")
 
 MODEL_NAME = "docscan-classifier"
 MODEL_STAGE_OR_VERSION = "1"
 
 app = FastAPI(title="DocScan Classifier API")
 
+
+#prometheus
+
+PREDICTION_COUNTER = Counter(
+    "docscan_predictions_total", "Total predictions made", ["predicted_class"]
+)
+PREDICTION_CONFIDENCE = Histogram(
+    "docscan_prediction_confidence", "Confidence score of predictions", ["predicted_class"]
+)
+EXTRACTION_ERRORS = Counter(
+    "docscan_extraction_errors_total", "Total extraction errors", ["predicted_class"]
+)
+
+
+
 model = mlflow.pytorch.load_model(f"models:/{MODEL_NAME}/{MODEL_STAGE_OR_VERSION}")
 
 @app.get("/health")
 def health():
     return {"status": "ok", "model": MODEL_NAME, "version": MODEL_STAGE_OR_VERSION}
+
+
+@app.get("/metrics")
+def prometheus_metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+@app.get("/stats")
+def stats():
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("SELECT predicted_class, COUNT(*), AVG(confidence) FROM classifications GROUP BY predicted_class;")
+    class_stats = cur.fetchall()
+
+    cur.execute("SELECT COUNT(*) FROM classifications;")
+    total = cur.fetchone()[0]
+
+    cur.close()
+    conn.close()
+
+    return {
+        "total_predictions": total,
+        "by_class": [
+            {"class": row[0], "count": row[1], "avg_confidence": round(row[2], 4)}
+            for row in class_stats
+        ],
+    }
 
 
 IMAGE_SIZE = 224
@@ -63,6 +131,11 @@ async def predict(file: UploadFile = File(...)):
 
     predicted_class = CLASS_NAMES[predicted_idx.item()]
     confidence_value = round(confidence.item(), 4)
+
+    logger.info(f"Prediction: class={predicted_class} confidence={confidence_value} filename={file.filename}")
+    PREDICTION_COUNTER.labels(predicted_class=predicted_class).inc()
+    PREDICTION_CONFIDENCE.labels(predicted_class=predicted_class).observe(confidence_value)
+    #print(f"PRINT TEST: class={predicted_class}")
 
     # --- Save file to MinIO ---
     file_id = str(uuid.uuid4())
@@ -114,6 +187,8 @@ async def predict(file: UploadFile = File(...)):
 
             extraction_result = extracted_fields
         except Exception as e:
+            logger.error(f"Extraction failed for invoice (storage_key={storage_key}): {e}")
+            EXTRACTION_ERRORS.labels(predicted_class=predicted_class).inc()
             extraction_result = {"error": str(e)}
 
     elif predicted_class == "fallback":
@@ -139,6 +214,8 @@ async def predict(file: UploadFile = File(...)):
 
             extraction_result = extracted_fields
         except Exception as e:
+            logger.error(f"Extraction failed for fallback (storage_key={storage_key}): {e}")
+            EXTRACTION_ERRORS.labels(predicted_class=predicted_class).inc()            
             extraction_result = {"error": str(e)}
 
     elif predicted_class == "form":
@@ -170,6 +247,8 @@ async def predict(file: UploadFile = File(...)):
 
             extraction_result = extracted_fields
         except Exception as e:
+            logger.error(f"Extraction failed for form (storage_key={storage_key}): {e}")
+            EXTRACTION_ERRORS.labels(predicted_class=predicted_class).inc()
             extraction_result = {"error": str(e)}
 
     elif predicted_class == "questionnaire":
@@ -201,6 +280,8 @@ async def predict(file: UploadFile = File(...)):
 
             extraction_result = extracted_fields
         except Exception as e:
+            logger.error(f"Extraction failed for questionnaire (storage_key={storage_key}): {e}")
+            EXTRACTION_ERRORS.labels(predicted_class=predicted_class).inc()
             extraction_result = {"error": str(e)}
 
     elif predicted_class == "handwritten":
@@ -226,6 +307,8 @@ async def predict(file: UploadFile = File(...)):
 
             extraction_result = extracted_fields
         except Exception as e:
+            logger.error(f"Extraction failed for handwritten (storage_key={storage_key}): {e}")
+            EXTRACTION_ERRORS.labels(predicted_class=predicted_class).inc()
             extraction_result = {"error": str(e)}
 
     return {

@@ -12,3 +12,6 @@ easyocr
 anthropic
 sentencepiece
 protobuf
+python-dotenv
+prometheus-client
+streamlit

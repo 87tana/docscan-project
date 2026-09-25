@@ -5,7 +5,7 @@ WORKDIR /app
 # Install API dependencies first (better Docker layer caching)
 COPY api/requirements.txt api/requirements.txt
 RUN pip install --no-cache-dir -r api/requirements.txt
-
+RUN python3 -c "import easyocr; easyocr.Reader(['en'])"
 
 # Copy the code and model files the API needs
 COPY api/ api/
