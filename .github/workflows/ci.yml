@@ -25,4 +25,4 @@ jobs:
           pip install pytest httpx
 
       - name: Run unit tests
-        run: pytest tests/test_api.py::test_class_names_count tests/test_api.py::test_class_names_are_unique -v
+        run: pytest tests/test_constants.py -v
