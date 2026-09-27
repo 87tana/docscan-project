@@ -1,1 +1,1 @@
-CLASS_NAMES = ["form", "invoice", "handwritten", "questionnaire", "fallback","new"]
+CLASS_NAMES = ["form", "invoice", "handwritten", "questionnaire", "fallback"]
